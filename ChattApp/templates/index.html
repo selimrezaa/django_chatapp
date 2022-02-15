@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Chat-App</title>
+  </head>
+  <body>
+    <h3>Chat-App</h3>
+    <h3 id='ct'></h3>
+    <textarea id="chat-log" rows="20" cols="35"></textarea><br>
+    <input type="text" id="chat-msg-input" value="">
+    <button type="submit" id="chat-msg-submit">SEND</button>
+    {{groupname|json_script:'group-name'}}
+    <script>
+      const groupName = JSON.parse(document.getElementById('group-name').textContent)
+      console.log("gorup name", groupName)
+
+      var ws = new WebSocket('ws://127.0.0.1:8000/ws/sc/'+groupName+'/')
+
+      ws.onopen = function() {
+        console.log('websocket connected!...')
+        ws.send('hi msg from client...')
+      }
+
+      ws.onmessage = function (event) {
+        console.log("data received form server side...", event.data)
+        const data = JSON.parse(event.data)
+
+        document.querySelector("#chat-log").value += (data.msg + '\n' )
+      }
+
+
+      ws.onerror = function(event) {
+        console.log('Error...', event['text'])
+      }
+
+      ws.onclose = function(event) {
+        console.log('Close form client ...', event['text'])
+      }
+      
+      document.getElementById("chat-msg-submit").onclick = function(){
+        const messageInputDom = document.getElementById("chat-msg-input")
+        const message = messageInputDom.value
+        const messagetype = typeof(message)
+        console.log("message type of.....", messagetype)
+        
+        ws.send(JSON.stringify({
+          'msg': message
+        }))
+
+        messageInputDom.value = ''
+
+      }
+
+    </script>
+  </body>
+</html>
